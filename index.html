@@ -1,39 +1,270 @@
-<html>
-    <head>
-	<link rel="stylesheet" href="./css/style.css" />
-	<link rel="stylesheet" href="./css/bootstrap.min.css" />
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>استاد روح پرور</title>
+<style>
+  :root {
+    --bg: #fafafa;
+    --card: #ffffff;
+    --border: #e0e0e0;
+    --text: #222;
+    --muted: #666;
+    --primary: #3366ff;
+    --radius: 14px;
+    --shadow: 0 4px 12px rgba(0,0,0,0.05);
+  }
 
-	<script type="text/javascript" src="./lib/jquery-1.7.2.min.js"></script>
-	<script type="text/javascript" src="./src/main.js"></script>
-	<script type="text/javascript" src="./src/algorithm.js"></script>
-	<script type="text/javascript" src="./src/utils.js"></script>
-	<script type="text/javascript" src="./src/data.js"></script>
-    </head>
-    <body>
-	<div class="container">
-	    <header>
-		<h1 id="title">Traveling Salesman Problem Using Genetic Algorithms</h1>
-		<h2 >Farhad Bigonahi - Ostad Hoseini</h1>
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Inter", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 24px;
+  }
 
-	    </header>
-	    <div class="row-fluid">
-		<div id="control_bottons" class="btn-group row">
-		    <button id="addRandom_btn" class="btn">Add 50 Random Points</button>
-		    <button id="start_btn" class="btn">Start/Restart</button>
-		    <button id="stop_btn" class="btn">Stop/Continue</button>
-		    <button id="clear_btn" class="btn">Clear All</button>
-		</div>
-		<div class="row">
-		    <span id="status" class="show-grid"></span>
-		</div>
-		<canvas id="canvas" 
-		    width="880" height="660"
-		    style="border:1px solid;">
-		    your browser sucks
-		</canvas>
-	    </div>
-	</div>
-	<footer>
-	</footer>
-    </body>
+  h1 { margin-bottom: 6px; }
+  h2 { color: var(--muted); margin-top: 0; font-size: 0.95rem; font-weight: 400; }
+
+  .palette, .canvas {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    padding: 16px;
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    max-width: 960px;
+    width: 100%;
+  }
+
+  .palette { margin-bottom: 20px; }
+  .canvas {
+    min-height: 220px;
+    margin-bottom: 16px;
+    border: 2px dashed var(--border);
+    transition: 0.3s;
+    text-align: center;
+  }
+  .canvas.dragover {
+    background: #f5f7ff;
+    border-color: var(--primary);
+  }
+
+  .node {
+    padding: 10px 18px;
+    border-radius: var(--radius);
+    cursor: grab;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: 0.2s;
+    user-select: none;
+    border: 1px solid transparent;
+  }
+  .node:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+
+  .input { background: #e3f2fd; border-color: #90caf9; color: #0d47a1; }
+  .transform { background: #e8f5e9; border-color: #a5d6a7; color: #1b5e20; }
+  .logic { background: #fff3e0; border-color: #ffcc80; color: #e65100; }
+  .output { background: #f3e5f5; border-color: #ce93d8; color: #4a148c; }
+
+  .step {
+    display: inline-block;
+    background: #f9f9f9;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    margin: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .step:hover {
+    background: #ffefef;
+    border-color: #e57373;
+    transform: scale(1.05);
+  }
+
+  button {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 12px 26px;
+    border-radius: var(--radius);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  button:hover { background: #264dce; transform: scale(1.03); }
+
+  #result {
+    font-size: 1.05rem;
+    font-weight: 500;
+    margin-top: 14px;
+    min-height: 28px;
+    text-align: center;
+  }
+
+  footer {
+    margin-top: auto;
+    padding: 20px;
+    font-size: 0.9rem;
+    color: var(--muted);
+    text-align: center;
+    border-top: 1px solid var(--border);
+    width: 100%;
+    background: #fff;
+  }
+
+  @media (max-width:600px) {
+    .node { font-size: 0.85rem; padding: 8px 12px; }
+    .palette, .canvas { width: 100%; }
+    footer { font-size: 0.8rem; }
+  }
+</style>
+</head>
+<body>
+  <h1>FlowLang v5</h1>
+  <h2>زبان برنامه‌نویسی بصری با منطق پیشرفته</h2>
+
+  <div class="palette">
+    <div class="node input" draggable="true" data-type="input"> ورودی</div>
+    <div class="node transform" draggable="true" data-type="uppercase"> بزرگ‌نویسی</div>
+    <div class="node transform" draggable="true" data-type="lowercase"> کوچک‌نویسی</div>
+    <div class="node transform" draggable="true" data-type="reverse"> برعکس</div>
+    <div class="node transform" draggable="true" data-type="trim">✂️ حذف فاصله</div>
+    <div class="node transform" draggable="true" data-type="length"> طول متن</div>
+    <div class="node transform" draggable="true" data-type="concat"> چسباندن</div>
+    <div class="node logic" draggable="true" data-type="repeat"> تکرار</div>
+    <div class="node logic" draggable="true" data-type="condition"> شرط</div>
+    <div class="node output" draggable="true" data-type="print">🖨️ چاپ خروجی</div>
+  </div>
+
+  <div id="canvas" class="canvas">اینجا بلوک‌های منطقی را بکشید...</div>
+
+  <button onclick="runFlow()">اجرای برنامه</button>
+
+  <div id="result"></div>
+
+  <footer>
+    <strong>تهیه و طراحی:</strong> فرهاد بیگناهی <br />
+    <strong>استاد:</strong> دکتر روح‌پرور <br />
+    <strong>درس:</strong> اصول طراحی کامپایلر — پاییز ۱۴۰۴
+  </footer>
+
+<script>
+let flow = [];
+
+document.querySelectorAll('.node').forEach(node => {
+  node.addEventListener('dragstart', e => e.dataTransfer.setData('type', node.dataset.type));
+});
+
+const canvas = document.getElementById('canvas');
+canvas.addEventListener('dragover', e => e.preventDefault());
+canvas.addEventListener('dragenter', () => canvas.classList.add('dragover'));
+canvas.addEventListener('dragleave', () => canvas.classList.remove('dragover'));
+canvas.addEventListener('drop', e => {
+  e.preventDefault();
+  canvas.classList.remove('dragover');
+  const type = e.dataTransfer.getData('type');
+  addStep(type);
+});
+
+function addStep(type) {
+  flow.push(type);
+  const step = document.createElement('div');
+  step.className = 'step';
+  step.textContent = ' ' + readable(type);
+  step.title = "برای حذف کلیک کنید";
+  step.onclick = () => removeStep(step, type);
+  canvas.appendChild(step);
+}
+
+function removeStep(el, type) {
+  flow = flow.filter(t => t !== type || el.removedOnce);
+  el.style.background = "#ffe6e6";
+  el.style.textDecoration = "line-through";
+  el.style.opacity = "0.6";
+  el.removedOnce = true;
+  setTimeout(() => el.remove(), 400);
+}
+
+function readable(type) {
+  const map = {
+    input: 'دریافت ورودی',
+    uppercase: 'تبدیل به حروف بزرگ',
+    lowercase: 'تبدیل به حروف کوچک',
+    reverse: 'برعکس کردن متن',
+    trim: 'حذف فاصله‌ها',
+    length: 'طول رشته',
+    concat: 'چسباندن رشته‌ها',
+    repeat: 'تکرار متن',
+    condition: 'شرط روی متن',
+    print: 'چاپ خروجی'
+  };
+  return map[type] || type;
+}
+
+function runFlow() {
+  if (flow.length === 0) return showResult(' ابتدا بلوک‌ها را اضافه کنید.');
+  let value = prompt(' لطفاً ورودی خود را وارد کنید:', 'hello world');
+  if (value === null) return;
+
+  for (let i = 0; i < flow.length; i++) {
+    const step = flow[i];
+    switch (step) {
+      case 'uppercase': value = value.toUpperCase(); break;
+      case 'lowercase': value = value.toLowerCase(); break;
+      case 'reverse': value = value.split('').reverse().join(''); break;
+      case 'trim': value = value.trim(); break;
+      case 'length': value = value.length.toString(); break;
+      case 'concat':
+        const extra = prompt('🔗 متنی که می‌خواهید اضافه شود:', 'World');
+        value = value + extra;
+        break;
+      case 'repeat':
+        const times = parseInt(prompt(' چند بار تکرار شود؟', '2'));
+        value = isNaN(times) ? value : value.repeat(times);
+        break;
+      case 'condition':
+        const cond = prompt(' شرط: اگر متن شامل چه عبارتی باشد چاپ شود؟', 'A');
+        if (!value.includes(cond)) {
+          showResult(' شرط برقرار نیست!');
+          resetFlow();
+          return;
+        }
+        break;
+      case 'print':
+        showResult('✅ خروجی: ' + value);
+        break;
+    }
+  }
+  resetFlow();
+}
+
+function showResult(text) {
+  const output = document.getElementById('result');
+  output.textContent = '';
+  let i = 0;
+  const interval = setInterval(() => {
+    output.textContent += text[i];
+    i++;
+    if (i >= text.length) clearInterval(interval);
+  }, 25);
+}
+
+function resetFlow() {
+  flow = [];
+  canvas.innerHTML = 'اینجا بلوک‌های منطقی را بکشید...';
+}
+</script>
+</body>
 </html>
